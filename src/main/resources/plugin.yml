@@ -1,0 +1,34 @@
+name: SpawnGate
+version: 1.0.0
+main: com.spawngate.SpawnGatePlugin
+api-version: '1.20'
+author: Antigravity
+description: Обязательное чтение правил, защита зоны спавна и авто-верификация для Purpur
+softdepend:
+  - AuthMe
+  - LuckPerms
+
+commands:
+  verify:
+    description: Подтвердить заявку игрока (выдать верификацию)
+    permission: spawngate.admin
+    usage: /verify <ник>
+  unverify:
+    description: Забрать верификацию у игрока
+    permission: spawngate.admin
+    usage: /unverify <ник>
+  rules:
+    description: Внутренняя команда для навигации по страницам правил
+    usage: /rules [next|prev|page <номер>|accept]
+  spawngate:
+    description: Управление плагином SpawnGate
+    permission: spawngate.admin
+    usage: /spawngate reload
+
+permissions:
+  spawngate.admin:
+    description: Полный доступ к управлению верификацией и плагином
+    default: op
+  spawngate.bypass:
+    description: Обход ограничений зоны спавна без верификации
+    default: op

@@ -1,0 +1,8 @@
+target/
+build/
+*.jar
+!libs/*.jar
+.idea/
+*.iml
+.vscode/
+.DS_Store

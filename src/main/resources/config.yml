@@ -1,0 +1,87 @@
+# ============================================================== #
+#                    SpawnGate - Конфигурация                     #
+# ============================================================== #
+
+# Настройки зоны спавна
+spawn:
+  center-x: 0
+  center-z: 0
+  # Радиус в каждую сторону от центра (300 блоков = от -300 до +300, квадрат 600х600)
+  radius: 300
+  # Применять ограничения во всех мирах (Overworld, Nether, End)
+  all-worlds: true
+  # Если all-worlds: false, укажите конкретные миры:
+  worlds:
+    - world
+    - world_nether
+    - world_the_end
+
+# Настройки системы правил и верификации
+verification:
+  # Количество часов чистого онлайна (/playtime) для автоматической верификации
+  auto-verify-hours: 48
+  # Обязательное время задержки (в секундах) на чтение КАЖДОЙ страницы правил
+  anti-skip-seconds-per-page: 10
+  # Кулдаун между предупреждениями в чат (в секундах) при попытке сломать/поставить/открыть на спавне
+  message-cooldown-seconds: 5
+  # Ссылка на дискорд сервер
+  discord-url: "https://discord.gg/CAf7PbhZBW"
+
+# Интеграция с LuckPerms
+luckperms:
+  enabled: true
+  # Режим выдачи: "group" (выдавать группу) или "permission" (выдавать право)
+  mode: "group"
+  # Имя группы в LuckPerms (если mode: "group")
+  group-name: "verified"
+  # Пермишен (если mode: "permission")
+  permission-node: "spawngate.verified"
+
+# Сообщения сервера (поддерживается современный формат MiniMessage с фирменной палитрой #008a61 и #057285)
+messages:
+  prefix: "<gradient:#008a61:#057285><b>[Сервер]</b></gradient> "
+
+  # Сообщение при попытке нарушить запрет на спавне (ломать, ставить, открывать сундуки и т.д.)
+  spawn-restricted: |
+    <newline><gradient:#008a61:#057285><b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b></gradient>
+    <red><b>✖ Взаимодействие со спавном заблокировано!</b></red>
+    <gray>Вы находитесь в зоне спавна (<color:#008a61>300×300</color> от нулевых координат).</gray>
+    <gray>Чтобы взаимодействовать со спавном, подайте заявку в нашем Discord:</gray>
+    <click:open_url:'<discord>'><hover:show_text:'<color:#008a61>Нажмите, чтобы открыть Discord сервер!'><gradient:#008a61:#057285><b>➜ Нажмите сюда: <underlined><discord></underlined></b></gradient></hover></click>
+    <newline><gray>Либо дождитесь авто-верификации. Осталось наиграть: <color:#057285><b><remaining_time></b></color></gray>
+    <gradient:#008a61:#057285><b>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</b></gradient><newline>
+
+  # Сообщение, если игрок пытается переключить страницу правил раньше времени
+  rules-timer-wait: "<prefix><red>Пожалуйста, внимательно читайте правила! До перехода осталось: <color:#008a61><b><seconds></b></color> сек."
+
+  # Сообщение об успешном прочтении правил
+  rules-completed: |
+    <newline><gradient:#008a61:#057285><b>✔ Вы успешно ознакомились с правилами сервера!</b></gradient>
+    <gray>Вам открыт доступ к выживанию за пределами зоны спавна (300 блоков от 0, 0).</gray>
+    <gray>Подайте заявку в Discord <color:#008a61><discord></color> или наиграйте 48 часов для снятия ограничений на спавне!</gray><newline>
+
+  # Сообщение при авто-верификации (после 48 часов онлайна)
+  auto-verified: |
+    <newline><gradient:#008a61:#057285><b>★ ПОЗДРАВЛЯЕМ! ★</b></gradient>
+    <color:#008a61>Вы наиграли <b>48 часов</b> на сервере и автоматически получили статус <b>Верифицированного игрока</b>!</color>
+    <gray>Все ограничения на спавне для вас полностью сняты. Приятной игры!</gray><newline>
+
+  # Сообщение игроку, когда админ выдает /verify
+  manual-verified: |
+    <newline><gradient:#008a61:#057285><b>✔ Ваша заявка подтверждена администратором!</b></gradient>
+    <gray>Ограничения на спавне сняты. Вам выдана верификация!</gray><newline>
+
+  # Сообщение игроку, когда админ снимает /unverify
+  manual-unverified: |
+    <newline><red><b>✖ Ваша верификация была отозвана администратором.</b></red>
+    <gray>Ограничения в зоне спавна снова действуют.</gray><newline>
+
+  # Оповещения для администратора
+  admin:
+    verify-success: "<prefix><color:#008a61>Игрок <color:#057285><player></color> успешно верифицирован!</color>"
+    unverify-success: "<prefix><yellow>Верификация у игрока <color:#057285><player></color> успешно снята.</yellow>"
+    already-verified: "<prefix><red>Игрок <color:#057285><player></color> уже верифицирован!</red>"
+    not-verified: "<prefix><red>Игрок <color:#057285><player></color> не был верифицирован.</red>"
+    player-not-found: "<prefix><red>Игрок <color:#057285><player></color> не найден в базе данных.</red>"
+    reload-success: "<prefix><color:#008a61>Конфигурация и правила успешно перезагружены!</color>"
+    no-permission: "<prefix><red>У вас нет прав для выполнения этой команды.</red>"
