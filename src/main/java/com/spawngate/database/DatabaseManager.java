@@ -11,6 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Map;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
@@ -47,6 +49,20 @@ public class DatabaseManager {
                         "last_seen INTEGER" +
                         ");");
             }
+            // Обновляем существующую базу без удаления данных игроков.
+            Set<String> columns = new HashSet<>();
+            try (Statement statement = connection.createStatement();
+                 ResultSet rs = statement.executeQuery("PRAGMA table_info(players)")) {
+                while (rs.next()) columns.add(rs.getString("name"));
+            }
+            try (Statement statement = connection.createStatement()) {
+                if (!columns.contains("verified_by")) {
+                    statement.execute("ALTER TABLE players ADD COLUMN verified_by TEXT");
+                }
+                if (!columns.contains("verification_notification_pending")) {
+                    statement.execute("ALTER TABLE players ADD COLUMN verification_notification_pending INTEGER NOT NULL DEFAULT 0");
+                }
+            }
             plugin.getLogger().info("База данных SQLite успешно инициализирована.");
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "Ошибка при подключении к SQLite базе данных: " + e.getMessage(), e);
@@ -60,7 +76,7 @@ public class DatabaseManager {
         return connection;
     }
 
-    public PlayerData getOrLoad(UUID uuid, String username) {
+    public synchronized PlayerData getOrLoad(UUID uuid, String username) {
         if (cache.containsKey(uuid)) {
             PlayerData cached = cache.get(uuid);
             if (username != null && !username.equalsIgnoreCase(cached.getUsername())) {
@@ -76,14 +92,8 @@ public class DatabaseManager {
                 ps.setString(1, uuid.toString());
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        PlayerData data = new PlayerData(
-                                uuid,
-                                rs.getString("username"),
-                                rs.getInt("rules_completed") == 1,
-                                rs.getInt("current_rule_page"),
-                                rs.getInt("verified") == 1,
-                                rs.getLong("playtime_seconds")
-                        );
+                        PlayerData data = readPlayer(rs);
+                        if (username != null) data.setUsername(username);
                         cache.put(uuid, data);
                         return data;
                     }
@@ -116,13 +126,14 @@ public class DatabaseManager {
         return cache.get(uuid);
     }
 
-    public void save(PlayerData data) {
-        if (data == null) return;
+    public synchronized boolean save(PlayerData data) {
+        if (data == null) return false;
 
         try {
             Connection conn = getConnection();
             String sql = "UPDATE players SET username = ?, rules_completed = ?, current_rule_page = ?, " +
-                    "verified = ?, playtime_seconds = ?, last_seen = ? WHERE uuid = ?;";
+                    "verified = ?, playtime_seconds = ?, last_seen = ?, verified_by = ?, " +
+                    "verification_notification_pending = ? WHERE uuid = ?;";
             try (PreparedStatement ps = conn.prepareStatement(sql)) {
                 ps.setString(1, data.getUsername());
                 ps.setInt(2, data.isRulesCompleted() ? 1 : 0);
@@ -130,12 +141,15 @@ public class DatabaseManager {
                 ps.setInt(4, data.isVerified() ? 1 : 0);
                 ps.setLong(5, data.getPlaytimeSeconds());
                 ps.setLong(6, System.currentTimeMillis());
-                ps.setString(7, data.getUuid().toString());
-                ps.executeUpdate();
+                ps.setString(7, data.getVerifiedBy());
+                ps.setInt(8, data.isVerificationNotificationPending() ? 1 : 0);
+                ps.setString(9, data.getUuid().toString());
+                return ps.executeUpdate() == 1;
             }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.WARNING, "Ошибка сохранения игрока " + data.getUsername() + ": " + e.getMessage(), e);
         }
+        return false;
     }
 
     public void saveAll() {
@@ -144,7 +158,7 @@ public class DatabaseManager {
         }
     }
 
-    public void unload(UUID uuid) {
+    public synchronized void unload(UUID uuid) {
         PlayerData data = cache.remove(uuid);
         if (data != null) {
             save(data);
@@ -154,7 +168,7 @@ public class DatabaseManager {
     /**
      * Поиск игрока в базе по нику (даже если он оффлайн)
      */
-    public PlayerData findByUsername(String username) {
+    public synchronized PlayerData findByUsername(String username) {
         // Проверяем онлайн кэш
         for (PlayerData data : cache.values()) {
             if (data.getUsername().equalsIgnoreCase(username)) {
@@ -169,15 +183,10 @@ public class DatabaseManager {
                 ps.setString(1, username);
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) {
-                        UUID uuid = UUID.fromString(rs.getString("uuid"));
-                        return new PlayerData(
-                                uuid,
-                                rs.getString("username"),
-                                rs.getInt("rules_completed") == 1,
-                                rs.getInt("current_rule_page"),
-                                rs.getInt("verified") == 1,
-                                rs.getLong("playtime_seconds")
-                        );
+                        PlayerData data = readPlayer(rs);
+                        // Не создаём вторую копию данных подключённого игрока.
+                        PlayerData cached = cache.get(data.getUuid());
+                        return cached != null ? cached : data;
                     }
                 }
             }
@@ -186,6 +195,16 @@ public class DatabaseManager {
         }
 
         return null;
+    }
+
+    private PlayerData readPlayer(ResultSet rs) throws SQLException {
+        PlayerData data = new PlayerData(
+                UUID.fromString(rs.getString("uuid")), rs.getString("username"),
+                rs.getInt("rules_completed") == 1, rs.getInt("current_rule_page"),
+                rs.getInt("verified") == 1, rs.getLong("playtime_seconds"));
+        data.setVerifiedBy(rs.getString("verified_by"));
+        data.setVerificationNotificationPending(rs.getInt("verification_notification_pending") == 1);
+        return data;
     }
 
     public void close() {

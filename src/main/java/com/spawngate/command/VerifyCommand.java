@@ -38,8 +38,18 @@ public class VerifyCommand implements CommandExecutor, TabCompleter {
 
         String targetName = args[0];
 
+        if (plugin.getDatabaseManager().findByUsername(targetName) == null
+                && plugin.getServer().getPlayerExact(targetName) == null) {
+            send(sender, plugin.getConfig().getString("messages.admin.player-not-found",
+                            "<prefix><red>Игрок <player> ещё не заходил на сервер.</red>")
+                    .replace("<prefix>", plugin.getConfig().getString("messages.prefix", ""))
+                    .replace("<player>", targetName));
+            return true;
+        }
+
         if (isVerifyAction) {
-            boolean success = plugin.getVerificationManager().verify(targetName, true);
+            boolean success = plugin.getVerificationManager().verify(targetName, true,
+                    sender instanceof Player ? sender.getName() : "Консоль");
             if (success) {
                 String msg = plugin.getConfig().getString("messages.admin.verify-success", "<green>Игрок <player> верифицирован!</green>")
                         .replace("<prefix>", plugin.getConfig().getString("messages.prefix", ""))
@@ -75,6 +85,7 @@ public class VerifyCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        if (!sender.hasPermission("spawngate.admin")) return Collections.emptyList();
         if (args.length == 1) {
             List<String> list = new ArrayList<>();
             for (Player p : plugin.getServer().getOnlinePlayers()) {

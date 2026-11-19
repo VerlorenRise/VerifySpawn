@@ -24,6 +24,10 @@ public class PlayerConnectionListener implements Listener {
         PlayerData data = plugin.getDatabaseManager().getOrLoad(player.getUniqueId(), player.getName());
         data.setSessionJoinTimestamp(System.currentTimeMillis());
 
+        // Проверяем также восстановленные AuthMe-сессии без повторного /login.
+        Bukkit.getScheduler().runTaskLater(plugin, () ->
+                plugin.getVerificationManager().sendPendingNotification(player), 6L);
+
         // Если AuthMe отсутствует на сервере, правила открываются сразу при входе
         if (!plugin.getAuthMeHook().isEnabled()) {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {

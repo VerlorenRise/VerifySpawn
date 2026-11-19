@@ -18,7 +18,7 @@ public class ProtectionManager {
     }
 
     /**
-     * Проверка: находится ли локация в зоне спавна (по умолчанию 300х300 от 0, 0)
+     * Квадратная зона: по 200 блоков от центра по X и Z, независимо от высоты.
      */
     public boolean isInSpawnZone(Location loc) {
         if (loc == null || loc.getWorld() == null) return false;
@@ -33,7 +33,7 @@ public class ProtectionManager {
 
         int centerX = plugin.getConfig().getInt("spawn.center-x", 0);
         int centerZ = plugin.getConfig().getInt("spawn.center-z", 0);
-        int radius = plugin.getConfig().getInt("spawn.radius", 300);
+        int radius = plugin.getConfig().getInt("spawn.radius", 200);
 
         int deltaX = Math.abs(loc.getBlockX() - centerX);
         int deltaZ = Math.abs(loc.getBlockZ() - centerZ);

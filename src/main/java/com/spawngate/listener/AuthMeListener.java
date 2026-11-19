@@ -40,6 +40,7 @@ public class AuthMeListener implements Listener {
                 plugin.getRulesManager().freezePlayer(player);
                 plugin.getRulesManager().sendPage(player, data.getCurrentRulePage());
             }
+            plugin.getVerificationManager().sendPendingNotification(player);
         }, 5L); // Небольшая задержка 5 тиков, чтобы AuthMe закончил свои процедуры
     }
 }

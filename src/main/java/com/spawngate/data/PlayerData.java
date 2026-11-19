@@ -9,6 +9,8 @@ public class PlayerData {
     private boolean rulesCompleted;
     private int currentRulePage;
     private boolean verified;
+    private String verifiedBy;
+    private boolean verificationNotificationPending;
     private long playtimeSeconds;
 
     // Данные сессии (в памяти)
@@ -63,6 +65,22 @@ public class PlayerData {
 
     public void setVerified(boolean verified) {
         this.verified = verified;
+    }
+
+    public String getVerifiedBy() {
+        return verifiedBy;
+    }
+
+    public void setVerifiedBy(String verifiedBy) {
+        this.verifiedBy = verifiedBy;
+    }
+
+    public boolean isVerificationNotificationPending() {
+        return verificationNotificationPending;
+    }
+
+    public void setVerificationNotificationPending(boolean pending) {
+        this.verificationNotificationPending = pending;
     }
 
     public long getPlaytimeSeconds() {

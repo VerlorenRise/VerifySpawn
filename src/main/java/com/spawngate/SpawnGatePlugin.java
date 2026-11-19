@@ -35,6 +35,7 @@ public class SpawnGatePlugin extends JavaPlugin {
     public void onEnable() {
         // Загрузка конфигураций
         saveDefaultConfig();
+        upgradeConfig();
 
         // Инициализация базы данных SQLite
         this.databaseManager = new DatabaseManager(this);
@@ -114,6 +115,21 @@ public class SpawnGatePlugin extends JavaPlugin {
         if (rulesManager != null) {
             rulesManager.load();
         }
+    }
+
+    private void upgradeConfig() {
+        if (getConfig().getInt("config-version", 1) >= 2) return;
+
+        // Старый стандартный радиус меняем один раз; пользовательские значения сохраняем.
+        if (getConfig().getInt("spawn.radius", 300) == 300) {
+            getConfig().set("spawn.radius", 200);
+            String restricted = getConfig().getString("messages.spawn-restricted", "");
+            getConfig().set("messages.spawn-restricted", restricted.replace("300×300", "по 200 блоков от центра, квадрат 400×400"));
+            String completed = getConfig().getString("messages.rules-completed", "");
+            getConfig().set("messages.rules-completed", completed.replace("300 блоков от 0, 0", "200 блоков от центра"));
+        }
+        getConfig().set("config-version", 2);
+        saveConfig();
     }
 
     public DatabaseManager getDatabaseManager() {

@@ -1,5 +1,5 @@
 name: SpawnGate
-version: 1.0.0
+version: ${project.version}
 main: com.spawngate.SpawnGatePlugin
 api-version: '1.20'
 author: Antigravity
